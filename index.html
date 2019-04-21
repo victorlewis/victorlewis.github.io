@@ -1,1 +1,57 @@
-<h3>Useful things</h3>
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Useful Things</title>
+<style>
+	body{
+		margin:1em auto;
+		max-width:40em;
+		padding:0 .62em;
+		font:1.2em/1.62 sans-serif;
+	}
+	h1,h2,h3 {
+		line-height:1.2;
+	}
+	@media print{
+		body{
+			max-width:none
+		}
+	}
+</style>
+<article>
+	<header>
+		<h1>Useful things</h1>
+		<aside>Noted for posterity and in case of use to anybody else.</aside>
+	</header>
+	<h2>Gstreamer pipelines</h2>
+	<h3>Send synched audio and video via UDP, without RTSP or additional maščobe.</h3>
+	<p>
+		################################################
+		## SEND TO PEER
+		################################################
+		gst-launch-1.0 rtpbin name=rtpbin \
+		avfvideosrc ! clockoverlay halignment=right valignment=bottom text="iMac Cam" shaded-background=true font-desc="Sans, 24" time-format="%c" ! videoscale ! videoconvert ! "video/x-raw,width=640,height=480" ! queue ! x264enc key-int-max=30 bitrate=500 speed-preset=ultrafast tune=zerolatency ! queue ! rtph264pay config-interval=1 pt=96 ! \
+		rtpbin.send_rtp_sink_0 \
+		rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.2 port=40000  \
+		rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.2 port=40001 sync=false async=false  \
+		autoaudiosrc ! audioconvert ! avenc_aac ! rtpmp4gpay ! rtpbin.send_rtp_sink_1                   \
+		rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.2 port=40002                            \
+		rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.2 port=40003 sync=false async=false
+		################################################
+		## RECEIVE
+		################################################
+		gst-launch-1.0 rtpbin name=rtpbin rtcp-sync-send-time=false \
+		udpsrc caps="application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)MPEG4-GENERIC, encoding-params=(string)1, streamtype=(string)5, profile-level-id=(string)2, mode=(string)AAC-hbr, config=(string)120856e500, sizelength=(string)13" \
+		        port=40002 ! rtpbin.recv_rtp_sink_1                                \
+		    rtpbin. ! rtpmp4gdepay ! avdec_aac ! autoaudiosink                           \
+		     udpsrc port=40003 ! rtpbin.recv_rtcp_sink_1                               \
+		udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+		        port=40000 ! rtpbin.recv_rtp_sink_0                                \
+		    rtpbin. ! rtph264depay ! queue ! avdec_h264 ! autovideosink                    \
+		 udpsrc port=40001 ! rtpbin.recv_rtcp_sink_0
+		################################################
+	</p>
+
+
+</article>
