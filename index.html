@@ -49,5 +49,15 @@
 		 udpsrc port=40001 ! rtpbin.recv_rtcp_sink_0
 	</p>
 
-
+	<h3>Synched audio with Raspberry pi and USB jpeg camera</h3>
+	<h4>Receive</h4>
+	gst-launch-1.0 rtpbin name=rtpbin rtcp-sync-send-time=false \
+udpsrc caps="application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)MPEG4-GENERIC, encoding-params=(string)1, streamtype=(string)5, profile-level-id=(string)2, mode=(string)AAC-hbr, config=(string)120856e500, sizelength=(string)13" \
+        port=40002 ! rtpbin.recv_rtp_sink_1                                \
+    rtpbin. ! rtpmp4gdepay ! avdec_aac ! autoaudiosink                           \
+     udpsrc port=40003 ! rtpbin.recv_rtcp_sink_1                               \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)JPEG" \
+        port=40000 ! rtpbin.recv_rtp_sink_0                                \
+    rtpbin. ! rtpjpegdepay ! queue ! jpegdec ! autovideosink                    \
+ udpsrc port=40001 ! rtpbin.recv_rtcp_sink_0
 </article>
