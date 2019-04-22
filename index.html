@@ -24,6 +24,18 @@
 		<h1>Useful things</h1>
 		<aside>Noted for posterity and in case of use to anybody else.</aside>
 	</header>
+	<h2>Jetson stuff</h2>
+	<h3>Configuring I2s audio on the Nvidia Jetson<h2>
+	Super simple. This is with a microphone on I2S0 and a mono speaker on I2S1.
+	<h4>Speaker<h4>
+		Setup:<br>
+		amixer -c tegrasndt186ref sset "ADMAIF2 Mux" "ADMAIF2"<br>
+		amixer -c tegrasndt186ref sset "I2S2 Mux" "ADMAIF2"<br>
+	Then you can output in Gstreamer by ensuring you have: ... audioconvert ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! alsasink device=hw:1,1
+	<h4>Microphone</h4>
+	Setup:<br> amixer -c tegrasndt186ref sset "ADMAIF1 Mux" "I2S1"
+	Gstreamer: alsasrc device=hw:1,0 ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! audioconvert ! audio/x-raw,channels=1 ! queue ! ...
+	
 	<h2>Gstreamer pipelines</h2>
 	<h3>Send synched audio and video via UDP, without RTSP or additional maščobe.</h3>
 	<p>
