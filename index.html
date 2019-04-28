@@ -24,7 +24,32 @@
 		<h1>Useful things</h1>
 		<aside>Noted for posterity and in case of use to anybody else.</aside>
 	</header>
-	<h2>Jetson stuff</h2>
+	<h2>Jetson Pipelines</h2>
+	<h4>Main Pipeline</h4>
+	<p>gst-launch-1.0 rtpbin name=rtpbin v4l2src device="/dev/video1" !
+		"image/jpeg,width=2560,height=960" ! nvjpegdec ! 'video/x-raw, format=(string)I420' ! nvvidconv !
+		'video/x-raw(memory:NVMM), format=(string)I420' ! omxh264enc ! h264parse ! rtph264pay config-interval=1 pt=96 !
+		rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40020
+		rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40021 sync=false async=false 
+		alsasrc device=hw:1,0 ! audio/x-raw,format=S32LE,rate=48000,channels=2 !
+		audioconvert ! audio/x-raw,channels=1 ! queue ! voaacenc ! rtpmp4gpay ! rtpbin.send_rtp_sink_1
+		rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.10 port=40022
+		rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.10 port=40023 sync=false async=false
+	</p>
+	</h4>Audio Listening</h4>
+	gst-launch-1.0 rtpbin name=rtpbin \
+audiotestsrc ! audioconvert ! avenc_opus ! rtpopuspay ! rtpbin.send_rtp_sink_1                   \
+rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.15 port=40302                            \
+rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.15 port=40303 sync=false async=false
+
+
+gst-launch-1.0 rtpbin name=rtpbin rtcp-sync-send-time=false \
+udpsrc caps="application/x-rtp, media=(string)audio, clock-rate=(int)48000, encoding-name=(string)OPUS" \
+port=40302 ! rtpbin.recv_rtp_sink_1                                \
+rtpbin. ! rtpjitterbuffer ! rtpopusdepay ! decodebin ! audioconvert ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! alsasink device=hw:1,1 \
+udpsrc port=40303 ! rtpbin.recv_rtcp_sink_1
+	<h2>Jetson config</h2>
+
 	<h3>Configuring I2s audio on the Nvidia Jetson<h2>
 	Super simple. This is with a microphone on I2S0 and a mono speaker on I2S1.
 	<h4>Speaker<h4>
@@ -36,6 +61,8 @@
 	Setup:<br> amixer -c tegrasndt186ref sset "ADMAIF1 Mux" "I2S1"
 	Gstreamer: alsasrc device=hw:1,0 ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! audioconvert ! audio/x-raw,channels=1 ! queue ! ...
 	
+		
+	<hr>
 	<h2>Gstreamer pipelines</h2>
 	<h3>Send synched audio and video via UDP, without RTSP or additional maščobe.</h3>
 	<p>
