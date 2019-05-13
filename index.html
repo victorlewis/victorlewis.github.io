@@ -24,6 +24,42 @@
 		<h1>Useful things</h1>
 		<aside>Noted for posterity and in case of use to anybody else.</aside>
 	</header>
+	<h2>Stereo Pipelines</h2>
+	gst-launch-1.0 rtpbin name=rtpbin \
+tcamsrc serial=13710642 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! videoconvert ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=5000 key-int-max=0 ! queue ! h264parse ! rtph264pay config-interval=1 pt=96 ! \
+rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.6 port=40320 \
+rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.6 port=40321 sync=false async=false \
+tcamsrc serial=04719917 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! videoconvert ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=5000 key-int-max=0 ! queue ! h264parse ! rtph264pay config-interval=1 pt=96 ! \
+rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.6 port=40322 \
+rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.6 port=40323 sync=false async=false
+
+	<h3>Receive</h3>
+
+gst-launch-1.0 rtpbin name=rtpbin rtcp-sync-send-time=false \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+port=40322 ! rtpbin.recv_rtp_sink_1 \
+rtpbin. ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink \
+udpsrc port=40323 ! rtpbin.recv_rtcp_sink_1 \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+port=40320 ! rtpbin.recv_rtp_sink_0 \
+rtpbin. ! rtph264depay ! queue ! avdec_h264 ! autovideosink \
+udpsrc port=40321 ! rtpbin.recv_rtcp_sink_0
+
+	<h3>Send</h3>
+
+gst-launch-1.0 rtpbin name=rtpbin glstereomix name=mix \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+port=40322 ! rtpbin.recv_rtp_sink_1 \
+rtpbin. ! rtph264depay ! avdec_h264 ! videoconvert ! glupload ! mix. \
+udpsrc port=40323 ! rtpbin.recv_rtcp_sink_1 \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+port=40320 ! rtpbin.recv_rtp_sink_0 \
+rtpbin. ! rtph264depay ! queue ! avdec_h264 ! videoconvert ! glupload ! mix. \
+udpsrc port=40321 ! rtpbin.recv_rtcp_sink_0 \
+mix. ! video/x-raw'(memory:GLMemory)',multiview-mode=side-by-side ! \
+queue ! glimagesink output-multiview-mode=side-by-side
+	
+	
 	<h2>Jetson Pipelines</h2>
 	<h4>Send to RTSP server</h4>
 	gst-launch-1.0 -v rtpbin name=rtpbin v4l2src device="/dev/video1" ! "image/jpeg,width=2560,height=960" ! nvjpegdec ! 'video/x-raw, format=(string)I420' ! nvvidconv ! 'video/x-raw(memory:NVMM), format=(string)I420' ! omxh264enc ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=206.189.30.103 port=40000 rtpbin.send_rtcp_src_0 ! udpsink host=206.189.30.103 port=40001 sync=false async=false  alsasrc device=hw:1,0 ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! audioconvert ! audio/x-raw,channels=1 ! queue ! voaacenc ! rtpmp4gpay ! rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! udpsink host=206.189.30.103 port=40002 rtpbin.send_rtcp_src_1 ! udpsink host=206.189.30.103 port=40003 sync=false async=false
