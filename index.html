@@ -25,13 +25,10 @@
 		<aside>Noted for posterity and in case of use to anybody else.</aside>
 	</header>
 	<h2>Stereo Pipelines</h2>
-	gst-launch-1.0 rtpbin name=rtpbin \
-tcamsrc serial=13710642 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! videoconvert ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=5000 key-int-max=0 ! queue ! h264parse ! rtph264pay config-interval=1 pt=96 ! \
-rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.6 port=40320 \
-rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.6 port=40321 sync=false async=false \
-tcamsrc serial=04719917 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! videoconvert ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=5000 key-int-max=0 ! queue ! h264parse ! rtph264pay config-interval=1 pt=96 ! \
-rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.6 port=40322 \
-rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.6 port=40323 sync=false async=false
+gst-launch-1.0 rtpbin name=rtpbin \
+v4l2src device=/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_13710642-video-index0 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! videoconvert ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=10000 key-int-max=0 ! queue ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40320 rtpbin.send_rtcp_src_0 ! \
+udpsink host=192.168.1.10 port=40321 sync=false async=false v4l2src device=/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_04719917-video-index0 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! videoconvert ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=10000 key-int-max=0 ! queue ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.10 port=40322 \
+rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.10 port=40323 sync=false async=false
 
 	<h3>Receive</h3>
 
