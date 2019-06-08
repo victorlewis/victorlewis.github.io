@@ -29,7 +29,16 @@
 v4l2src device=/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_13710642-video-index0 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! vaapipostproc format=nv12 ! vaapih264enc ! queue ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.6 port=40320 rtpbin.send_rtcp_src_0 ! \
 udpsink host=192.168.1.6 port=40321 sync=false async=false v4l2src device=/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_04719917-video-index0 ! video/x-raw,width=2048,height=2048,framerate=30/1 ! vaapipostproc format=nv12 ! vaapih264enc ! queue ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! udpsink host=192.168.1.6 port=40322 \
 rtpbin.send_rtcp_src_1 ! udpsink host=192.168.1.6 port=40323 sync=false async=false
-	
+		<h3>Receive</h3>
+	gst-launch-1.0 rtpbin name=rtpbin rtcp-sync-send-time=false \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+port=40322 ! rtpbin.recv_rtp_sink_1 \
+rtpbin. ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink \
+udpsrc port=40323 ! rtpbin.recv_rtcp_sink_1 \
+udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264" \
+port=40320 ! rtpbin.recv_rtp_sink_0 \
+rtpbin. ! rtph264depay ! queue ! avdec_h264 ! autovideosink \
+udpsrc port=40321 ! rtpbin.recv_rtcp_sink_0 
 	
 	<h2>Stereo Pipelines</h2>
 gst-launch-1.0 rtpbin name=rtpbin \
