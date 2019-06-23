@@ -24,6 +24,34 @@
 		<h1>Useful things</h1>
 		<aside>Noted for posterity and in case of use to anybody else.</aside>
 	</header>
+	<h2>Two Raspi Zeroes</h2>
+	// IMPORTANT
+sudo timedatectl set-ntp True
+timedatectl status
+
+// LEFT
+
+gst-launch-1.0 rtpbin name=rtpbin \<br>
+rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40320 rtpbin.send_rtcp_src_0 ! \
+<br>
+udpsink host=192.168.1.10 port=40321 sync=false async=false
+
+	
+	
+// RIGHT
+
+gst-launch-1.0 rtpbin name=rtpbin \<br>
+rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40322 rtpbin.send_rtcp_src_0 ! \
+<br>
+udpsink host=192.168.1.10 port=40323 sync=false async=false
+
+	<h2>Sound</h2>
+gst-launch-1.0 -v alsasrc device=plughw:1 ! volume volume=10.0 ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! audioconvert ! audio/x-raw,channels=1 ! queue ! voaacenc ! rtpmp4gpay ! udpsink host=192.168.1.6 port=40002
+<br>
+	gst-launch-1.0 udpsrc caps="application/x-rtp, media=(string)audio, clock-rate=(int)48000, encoding-name=(string)MPEG4-GENERIC, encoding-params=(string)1, streamtype=(string)5, profile-level-id=(string)2, mode=(string)AAC-hbr, config=(string)1188, sizelength=(string)13" port=60002 ! rtpmp4gdepay ! avdec_aac ! autoaudiosink
+
+	
+	
 	<h2>Stereo Pipeline VAAPI</h2>
 	gst-launch-1.0 rtpbin name=rtpbin \
 gst-launch-1.0 rtpbin name=rtpbin \
