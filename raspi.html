@@ -1,3 +1,16 @@
+<h4>Raspberry Pi (with speaker)</h4>
+gst-launch-1.0 rtpbin name=rtpbin rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40322 rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40323 sync=false async=false
+<br><br>
+gst-launch-1.0 -v udpsrc port=40200 ! "application/x-rtp, media=(string)audio, clock-rate=(int)48000, encoding-name=(string)X-GST-OPUS-DRAFT-SPITTKA-00, payload=(int)96" ! rtpopusdepay ! opusdec ! audioconvert ! alsasink sync=false
+
+<h4>Audio Pi (with mic)</h4>
+gst-launch-1.0 rtpbin name=rtpbin rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40320 rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40321 sync=false async=false alsasrc device=plughw:1 ! volume volume=10.0 ! audio/x-raw,format=S32LE,rate=48000,channels=2 ! audioconvert ! audio/x-raw,channels=1 ! audioresample ! opusenc ! rtpopuspay ! rtpbin.send_rtp_sink_2 rtpbin.send_rtp_src_2 ! udpsink host=192.168.1.10 port=40420 rtpbin.send_rtcp_src_2 ! udpsink host=192.168.1.10 port=40421 sync=false async=false
+<br><br>
+NOAUDIO:<br>
+gst-launch-1.0 rtpbin name=rtpbin rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40320 rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40321 sync=false async=false
+
+
+
 <h4>Speaker Pi</h4>
 gst-launch-1.0 -v udpsrc port=40302 ! "application/x-rtp, media=(string)audio, clock-rate=(int)48000, encoding-name=(string)X-GST-OPUS-DRAFT-SPITTKA-00, payload=(int)96" ! rtpopusdepay ! opusdec ! audioconvert ! alsasink sync=false
 
@@ -5,8 +18,3 @@ gst-launch-1.0 -v udpsrc port=40302 ! "application/x-rtp, media=(string)audio, c
 
 gst-launch-1.0 audiotestsrc ! audioconvert ! opusenc ! rtpopuspay ! udpsink host=192.168.1.16 port=5000
 
-<h4>Raspberry Pi (with speaker)</h4>
-gst-launch-1.0 rtpbin name=rtpbin rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40322 rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40323 sync=false async=false
-
-<h4>Audio Pi (with mic)</h4>
-gst-launch-1.0 rtpbin name=rtpbin rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40320 rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40321 sync=false async=false
