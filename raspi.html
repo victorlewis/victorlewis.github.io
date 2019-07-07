@@ -11,6 +11,10 @@ dmic_sv instead of plughw:1 when you have properly followed the amixer instructi
 NOAUDIO:<br>
 gst-launch-1.0 rtpbin name=rtpbin rpicamsrc preview=0 bitrate=4000000 do-timestamp=1 ! 'video/x-h264, width=1296, height=972, framerate=42/1,profile=high' ! h264parse ! rtph264pay config-interval=1 pt=96 ! rtpbin.send_rtp_sink_0 rtpbin.send_rtp_src_0 ! udpsink host=192.168.1.10 port=40320 rtpbin.send_rtcp_src_0 ! udpsink host=192.168.1.10 port=40321 sync=false async=false
 
+<br><br>
+Python script to control audio: sudo apt install python-alsaaudio
+<br>
+Install the serial stuff: sudo apt install python-serial
 
 
 <h4>Speaker Pi</h4>
